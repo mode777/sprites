@@ -49,7 +49,7 @@ export class QuadBuffer {
     const start = 0xFFFFFFFF
     for (let i = 0; i < this.capacity; i++) {
       // 0xAABBGGRR
-      const val = 0xFF000000 + i*32
+      const val = 0xFF000000 + i
       data.fill(val,i*4,i*4+4)
     }
     this.quadIdBuffer = this.gl.createBuffer()
@@ -183,5 +183,17 @@ export class QuadBuffer {
     this.positions.set(pos, i * 3)
     this.uvs.set(uv, i * 2)
     this.colors.set(color, i*4)
+  }
+
+  setColor(i: number, color: vec4){
+    const offset = i*16
+    this.colors.set(color, offset)
+    this.colors.set(color, offset+4)
+    this.colors.set(color, offset+8)
+    this.colors.set(color, offset+12)
+  }
+  getColor(i: number): vec4{
+    const offset = i*16
+    return <vec4><unknown>this.colors.subarray(offset,offset+4)
   }
 }
