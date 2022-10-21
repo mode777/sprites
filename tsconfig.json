@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"target": "es6",
+		"lib": [
+			"es6",
+			"dom"
+		],
+		"module": "commonjs",
+		"sourceMap": true,
+		"experimentalDecorators": true,
+		//"inlineSourceMap": true,
+		//"inlineSources": true,
+		"importHelpers": true,
+		"noImplicitAny": false,
+		"noImplicitThis": false,
+		"baseUrl": ".",
+		"paths": {}
+	}
+}

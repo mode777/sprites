@@ -1,0 +1,27 @@
+{
+  "name": "kanvas-template",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.bundle.js",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --watch --mode=development",
+    "start": "webpack && http-server ."
+  },
+  "author": "Alexander Klingenbeck",
+  "license": "MIT",
+  "devDependencies": {
+    "raw-loader": "^4.0.2",
+    "serve": "^12.0.0",
+    "ts-loader": "^6.2.0",
+    "typescript": "^3.6.3",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.2"
+  },
+  "dependencies": {
+    "@mapbox/shelf-pack": "^3.2.0",
+    "gl-matrix": "^3.4.3",
+    "reflect-metadata": "^0.1.13",
+    "tslib": "^1.10.0"
+  }
+}
