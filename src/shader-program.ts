@@ -8,8 +8,10 @@ export class ShaderProgram {
   public readonly attributes: { [key: string]: ActiveInfoEx; } = {};
   public readonly uniforms: { [key: string]: ActiveInfoEx; } = {};
 
-  constructor(private gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) {
-    this.program = this.compileProgam(gl, vertexSource, fragmentSource);
+  constructor(private gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string, definitions: string[] = []) {
+    const pre = definitions.map(x => `#define ${x}\n`).concat()
+    console.log(pre)
+    this.program = this.compileProgam(gl, pre+vertexSource, pre+fragmentSource);
     const attributes = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES);
     const uniforms = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS);
     for (let i = 0; i < attributes; i++) {
@@ -60,7 +62,7 @@ export class ShaderProgram {
   public setUniform(name: string, ...values: number[]) {
     const u = this.uniforms[name];
     if (!u) {
-      console.warn('Uniform not found: ' + name);
+      //console.warn('Uniform not found: ' + name);
       return;
     }
     this.applyUniform(this.gl, u.type, <WebGLUniformLocation>u.location, values);
