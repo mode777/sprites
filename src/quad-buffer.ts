@@ -1,6 +1,32 @@
 import { vec2, vec3, vec4 } from 'gl-matrix'
-import { gl } from './main'
 import { ShaderProgram } from './shader-program'
+
+const vec2zero = vec2.fromValues(0,0)
+const vec3zero = vec3.fromValues(0,0,0)
+const vec4zero = vec4.fromValues(0,0,0,0)
+
+export function neighbour(x:number,y:number,z:number,dir: Direction): vec3{
+  switch (dir) {
+    case Direction.Front: return [x,y,z+1]
+    case Direction.Back: return [x,y,z-1]
+    case Direction.Left: return [x-1,y,z]
+    case Direction.Right: return [x+1,y,z]
+    case Direction.Top: return [x,y+1,z]
+    case Direction.Bottom: return [x,y-1,z]
+    default: throw new Error('Invalid direction')
+  }
+}
+export function oppositeDirection(dir: Direction){
+  switch (dir) {
+    case Direction.Front: return Direction.Back
+    case Direction.Back: return Direction.Front
+    case Direction.Left: return Direction.Right
+    case Direction.Right: return Direction.Left
+    case Direction.Top: return Direction.Bottom
+    case Direction.Bottom: return Direction.Top
+    default: throw new Error('Invalid direction')
+  }
+}
 
 export enum Direction {
   Front,
@@ -21,6 +47,8 @@ export class QuadBuffer {
   colors: Uint8Array
   indexBuffer: WebGLBuffer
   quadIdBuffer: WebGLBuffer
+  quads: number = 0
+  private free: number[] = []
 
   constructor(private gl: WebGLRenderingContext, public readonly capacity: number) {
     this.positionsBuffer = gl.createBuffer()
@@ -45,6 +73,7 @@ export class QuadBuffer {
   }
 
   private createQuadIds(){
+    const gl = this.gl
     const data = new Uint32Array(this.capacity * 4)
     const start = 0xFFFFFFFF
     for (let i = 0; i < this.capacity; i++) {
@@ -58,6 +87,7 @@ export class QuadBuffer {
   }
 
   private createIndices(){
+    const gl = this.gl
     const data = new Uint16Array(this.capacity * 6)
     let v = 0
     for (let i = 0; i < this.capacity; i++) {
@@ -82,12 +112,14 @@ export class QuadBuffer {
   }
 
   enableAttribute(buffer: WebGLBuffer, attribute: number, components: number, type: number, normalized: boolean){
+    const gl = this.gl
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.vertexAttribPointer(attribute, components, type, normalized, 0, 0)
     gl.enableVertexAttribArray(attribute)
   }
 
   draw(program: ShaderProgram) {
+    const gl = this.gl
     const aPos = <number>program.attributes['aPos'].location
     const aUv = <number>program.attributes['aUv'].location
     const aColor = <number>program.attributes['aColor'].location
@@ -101,6 +133,7 @@ export class QuadBuffer {
   }
 
   drawQuadId(program: ShaderProgram) {
+    const gl = this.gl
     const aPos = <number>program.attributes['aPos'].location
     const aColor = <number>program.attributes['aColor'].location
     
@@ -111,12 +144,31 @@ export class QuadBuffer {
     gl.drawElements(gl.TRIANGLES, this.capacity * 6, gl.UNSIGNED_SHORT, 0)
   }
 
+  remove(index: number){
+    if(index >= this.quads) throw new Error('Quad ID out of range')
+    const i = index*4
+    this.writeVertex(i, vec3zero, vec4zero)
+    this.writeVertex(i+1, vec3zero, vec4zero)
+    this.writeVertex(i+2, vec3zero, vec4zero)
+    this.writeVertex(i+3, vec3zero, vec4zero)
+    //console.log('Free: ' + index)
+    this.free.push(index)
+  }
+
+  add(dir: Direction, sprite: vec4, offset: vec3 = [0,0,0]){
+    let idx = this.free.pop()
+    if(idx === undefined) idx = this.quads++
+    if(idx >= this.capacity) throw new Error('Quad buffer full')
+    this.set(idx, dir, sprite, offset)
+    //console.log("Add:" + idx)
+    return idx
+  }
+
   set(index: number, dir: Direction, sprite: vec4, offset: vec3 = [0,0,0]) {
     const i = index*4
     const uvs = this.uvs
     const pos = this.positions
     const [ox,oy,oz] = offset
-    const [x,y,w,h] = sprite
     const o = 0.5 
     
     let a: vec3, b: vec3, c: vec3, d: vec3, color: vec4
@@ -173,15 +225,16 @@ export class QuadBuffer {
         throw new Error('Invalid direction')
     }
 
-    this.writeVertex(i, a, [x, y+h], color)
-    this.writeVertex(i+1, b, [x, y], color)
-    this.writeVertex(i+2, c, [x+w, y], color)
-    this.writeVertex(i+3, d, [x+w, y+h], color)
+    this.setSprite(index, sprite)
+    this.writeVertex(i, a, color)
+    this.writeVertex(i+1, b, color)
+    this.writeVertex(i+2, c, color)
+    this.writeVertex(i+3, d, color)
   }
 
-  writeVertex(i: number, pos: vec3, uv: vec2, color: vec4) {
+  writeVertex(i: number, pos: vec3, color: vec4) {
     this.positions.set(pos, i * 3)
-    this.uvs.set(uv, i * 2)
+    //this.uvs.set(uv, i * 2)
     this.colors.set(color, i*4)
   }
 
@@ -192,6 +245,19 @@ export class QuadBuffer {
     this.colors.set(color, offset+8)
     this.colors.set(color, offset+12)
   }
+
+  setSprite(i: number, sprite: vec4){
+    const [x,y,w,h] = sprite
+    const mul = 4
+    const spr = [
+      x*mul+1, (y+h)*mul-1,
+      x*mul+1, y*mul+1,
+      (x+w)*mul-1, y*mul+1,
+      (x+w)*mul-1, (y+h)*mul-1
+    ]
+    this.uvs.set(spr,i*2*4)
+  }
+
   getColor(i: number): vec4{
     const offset = i*16
     return <vec4><unknown>this.colors.subarray(offset,offset+4)

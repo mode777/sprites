@@ -1,8 +1,8 @@
 import { Texture } from './texture';
 
 export class Framebuffer {
-  private framebuffer: WebGLFramebuffer;
-  private texture: Texture;
+  public readonly  framebuffer: WebGLFramebuffer;
+  public texture: Texture;
   private depthBuffer: WebGLRenderbuffer;
 
   constructor(private gl: WebGLRenderingContext, private width, private height) {
@@ -25,18 +25,6 @@ export class Framebuffer {
       throw new Error('Invalid framebuffer configuration');
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  }
-
-  bind() {
-    const gl = this.gl;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-    gl.viewport(0, 0, this.texture.width, this.texture.height);
-  }
-
-  unbind() {
-    const gl = this.gl;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   }
 
   readPixels(out_data: Uint8Array) {

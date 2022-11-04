@@ -10,3 +10,5 @@ interface WeakRefConstructor<T> {
     new(value:any): WeakRef<T>;
 }
 declare var WeakRef: WeakRefConstructor<any>;
+
+declare var showOpenFilePicker: any

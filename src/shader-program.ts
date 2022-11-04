@@ -1,3 +1,5 @@
+import { vec2, vec3, vec4, mat3, mat4 } from "gl-matrix";
+
 export interface ActiveInfoEx extends WebGLActiveInfo {
   location?: number | WebGLUniformLocation
 }
@@ -59,7 +61,7 @@ export class ShaderProgram {
     }
   }
 
-  public setUniform(name: string, ...values: number[]) {
+  public setUniform(name: string, values: vec2 | vec3 | vec4 | mat3 | mat4 | number[]) {
     const u = this.uniforms[name];
     if (!u) {
       //console.warn('Uniform not found: ' + name);
@@ -68,7 +70,7 @@ export class ShaderProgram {
     this.applyUniform(this.gl, u.type, <WebGLUniformLocation>u.location, values);
   }
 
-  private applyUniform(gl: WebGLRenderingContext, type: number, loc: WebGLUniformLocation, val: number[]) {
+  private applyUniform(gl: WebGLRenderingContext, type: number, loc: WebGLUniformLocation, val: vec2 | vec3 | vec4 | mat3 | mat4 | number[]) {
     switch (type) {
       case gl.FLOAT:
         return gl.uniform1fv(loc, val);
@@ -88,16 +90,16 @@ export class ShaderProgram {
       case gl.BOOL:
       case gl.SAMPLER_2D:
       case gl.SAMPLER_CUBE:
-        return gl.uniform1iv(loc, val);
+        return gl.uniform1iv(loc, <any>val);
       case gl.INT_VEC2:
       case gl.BOOL_VEC2:
-        return gl.uniform2iv(loc, val);
+        return gl.uniform2iv(loc, <any>val);
       case gl.INT_VEC3:
       case gl.BOOL_VEC3:
-        return gl.uniform3iv(loc, val);
+        return gl.uniform3iv(loc, <any>val);
       case gl.INT_VEC4:
       case gl.BOOL_VEC4:
-        return gl.uniform4iv(loc, val);
+        return gl.uniform4iv(loc, <any>val);
       default:
         throw new Error('Invalid type: ' + type);
     }

@@ -11,7 +11,9 @@ varying vec2 vUv;
 varying vec4 vColor;
 
 void main(void) {
-  vUv = aUv / uTextureSize;
+  vUv = (aUv/4.0) / uTextureSize;
   vColor = aColor;
-  gl_Position =  uProjection * uView * uModel * vec4(aPos, 1.0);
+  vec3 pos = aPos;
+  pos.y += sin(pos.x*0.7) * cos(pos.z*0.7) * 0.5;
+  gl_Position =  uProjection * uView * uModel * vec4(pos, 1.0);
 }
